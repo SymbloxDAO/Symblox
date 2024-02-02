@@ -6,8 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SYMToken is ERC20, Ownable {
     // Constructor to set the details of the token and mint initial reserve
+    uint256 private _initialReserve = 200e6 * (10 ** decimals());
+    
     constructor() ERC20("Symblox", "SYM") {
-        mint(msg.sender, 200e6 * (10**uint256(decimals()))); // Mint 200 million tokens for reserve
+        _mint(msg.sender, _initialReserve); // Mint 200 million tokens for reserve
     }
 
     /**
@@ -18,6 +20,14 @@ contract SYMToken is ERC20, Ownable {
      */
     function mint(address account, uint256 amount) public onlyOwner {
         _mint(account, amount);
+    }
+
+    function distributeTokens(address[] memory teamAddresses, uint256[] memory amounts) public onlyOwner {
+        require(teamAddresses.length == amounts.length, "Address and amount length mismatch");
+        
+        for(uint i = 0; i < teamAddresses.length; i++) {
+            transferFrom(owner(), teamAddresses[i], amounts[i]);
+        }
     }
 
     /**
@@ -34,4 +44,37 @@ contract SYMToken is ERC20, Ownable {
     // to include business logic that needs to be executed before any transfer, mint or burn
 
     // ... Additional functions like burning tokens, pause token transfers, etc.
+}
+
+contract MultiCollateralStaking {
+    // Collateral vault structure
+    struct Vault {
+        ERC20 collateral; // Collateral token
+        uint256 overcollateralizationRatio;
+        // ... Additional properties
+    }
+    
+    mapping(address => Vault) public vaults; // Mapping of token addresses to Vault structs
+
+    // Add or update a collateral vault
+    function addOrUpdateVault(
+        ERC20 _collateral,
+        uint256 _overcollateralizationRatio
+    ) external onlyOwner {
+        // ... Implementation goes here
+    }
+
+    // Functionality to stake SYM and mint xUSD and gSYM
+    function stakeAndMint(
+        ERC20 _collateral,
+        uint256 _amount
+    ) external {
+        // ... Implementation goes here
+    }
+    
+    // Adjust overcollateralization ratio - TODO: Implement the method details
+    function adjustOvercollateralizationRatio(ERC20 _collateral, uint256 newRatio) external onlyOwner {
+    }
+    
+    // ... Additional methods
 }
