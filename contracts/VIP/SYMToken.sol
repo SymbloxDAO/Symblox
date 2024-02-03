@@ -1,80 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SYMToken is ERC20, Ownable {
-    // Constructor to set the details of the token and mint initial reserve
-    uint256 private _initialReserve = 200e6 * (10 ** decimals());
-    
-    constructor() ERC20("Symblox", "SYM") {
-        _mint(msg.sender, _initialReserve); // Mint 200 million tokens for reserve
+contract TokenSwapper is Ownable {
+    IERC20 public otherToken;
+    IERC20 public symToken;
+
+    event TokensSwapped(address indexed user, uint256 amount);
+
+    constructor(IERC20 _otherToken, IERC20 _symToken) {
+        require(address(_otherToken) != address(0), "Other token address cannot be zero");
+        require(address(_symToken) != address(0), "SYM token address cannot be zero");
+
+        otherToken = _otherToken;
+        symToken = _symToken;
     }
 
     /**
-     * @dev Function to mint tokens
-     * This function can only be called by the owner of the contract
-     * @param account The address which will receive the minted tokens
-     * @param amount The amount of tokens to mint (in wei)
+     * Swap from the other token to the SYM token on a 1:1 basis.
+     *
+     * @param amount The amount of other tokens to swap.
      */
-    function mint(address account, uint256 amount) public onlyOwner {
-        _mint(account, amount);
-    }
-
-    function distributeTokens(address[] memory teamAddresses, uint256[] memory amounts) public onlyOwner {
-        require(teamAddresses.length == amounts.length, "Address and amount length mismatch");
+    function swap(uint256 amount) external {
+        require(amount > 0, "Amount must be greater than 0");
         
-        for(uint i = 0; i < teamAddresses.length; i++) {
-            transferFrom(owner(), teamAddresses[i], amounts[i]);
-        }
+        // Transfer other tokens to this contract
+        bool sent = otherToken.transferFrom(msg.sender, address(this), amount);
+        require(sent, "Failed to transfer other tokens");
+
+        // Ensure that this contract has enough SYM tokens for swapping
+        require(symToken.balanceOf(address(this)) >= amount, "Insufficient SYM balance in the contract");
+
+        // Transfer SYM tokens back to user
+        symToken.transfer(msg.sender, amount);
+
+        emit TokensSwapped(msg.sender, amount);
     }
 
     /**
-     * @dev Function to allow owner to adjust rewards APR, if needed.
-     * Placeholder for actual logic based on requirements.
-     * @param newApr The new APR value
+     * Withdraw SYM tokens from this contract (in case of excess or end of campaign).
+     *
+     * @param amount The number of SYM tokens to withdraw.
      */
-    function adjustRewardsApr(uint256 newApr) public onlyOwner {
-        // Adjust the rewards APR
-        // Actual implementation would require further detail
+    function withdrawSYM(uint256 amount) external onlyOwner {
+        require(amount <= symToken.balanceOf(address(this)), "Insufficient balance to withdraw");
+        symToken.transfer(msg.sender, amount);
     }
-
-    // Optionally, you may want to override `_beforeTokenTransfer` 
-    // to include business logic that needs to be executed before any transfer, mint or burn
-
-    // ... Additional functions like burning tokens, pause token transfers, etc.
-}
-
-contract MultiCollateralStaking {
-    // Collateral vault structure
-    struct Vault {
-        ERC20 collateral; // Collateral token
-        uint256 overcollateralizationRatio;
-        // ... Additional properties
-    }
-    
-    mapping(address => Vault) public vaults; // Mapping of token addresses to Vault structs
-
-    // Add or update a collateral vault
-    function addOrUpdateVault(
-        ERC20 _collateral,
-        uint256 _overcollateralizationRatio
-    ) external onlyOwner {
-        // ... Implementation goes here
-    }
-
-    // Functionality to stake SYM and mint xUSD and gSYM
-    function stakeAndMint(
-        ERC20 _collateral,
-        uint256 _amount
-    ) external {
-        // ... Implementation goes here
-    }
-    
-    // Adjust overcollateralization ratio - TODO: Implement the method details
-    function adjustOvercollateralizationRatio(ERC20 _collateral, uint256 newRatio) external onlyOwner {
-    }
-    
-    // ... Additional methods
 }
