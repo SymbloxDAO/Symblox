@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Owned.sol";
 
 contract MultiCollateralVault is Ownable {
     // Data structure to hold collateral information
