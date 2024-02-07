@@ -2,8 +2,9 @@
 pragma solidity ^0.8.17;
 
 import "./Owned.sol";
+import "../interfaces/IExchangeRate.sol";
 
-contract ExchangeRates is Owned, MixinSystemSettings, IExchangeRates {
+contract ExchangeRates is Owned, IExchangeRates {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 
