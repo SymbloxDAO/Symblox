@@ -19,8 +19,16 @@ contract SYMStaking {
     address public immutable xUSDAddress; 
     address public immutable gSYMAddress; 
 
+
     // Overcollateralization ratio
-    uint256 public constant OVERCOLLATERALIZATION_RATIO = 350;
+    uint256 public overcollateralizationRatio;
+
+    address public owner;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Caller is not the owner");
+        _;
+    }
 
     // Keep track of staked SYM
     mapping(address => uint256) public stakes;
@@ -37,6 +45,13 @@ contract SYMStaking {
         SYMToken = IERC20(_SYMTokenAddress);
         xUSDAddress = _xUSDAddress;
         gSYMAddress = _gSYMAddress;
+        overcollateralizationRatio = 350;
+        owner = msg.sender;
+    }
+
+    function serOvercollateralizationRatio(uint256 _newRatio) external onlyOwner {
+        require(_newRatio > 0, "Ratio must be bigger than zero");
+        overcollateralizationRatio = _newRatio;
     }
 
     function stakeSYM(uint256 symAmount) external {
@@ -49,7 +64,7 @@ contract SYMStaking {
 
         emit SYMStaked(msg.sender, symAmount);
         // Calculate xUSD amount to mint based on overcollateralization
-        uint256 xUSDAmtToMint = symAmount * 100 / OVERCOLLATERALIZATION_RATIO;
+        uint256 xUSDAmtToMint = symAmount * 100 / overcollateralizationRatio;
 
         // Mint xUSD and send to the staker
         IxUSD(xUSDAddress).mint(msg.sender, xUSDAmtToMint);
@@ -58,10 +73,11 @@ contract SYMStaking {
         emit gSYMMinted(msg.sender);
     }
 
+    //need to check requirements & compare to synthetix 
     function unstakeSYM(uint256 symAmount) external {
         require(stakes[msg.sender] >= symAmount, "Insufficient staked balance");
 
-        uint256 xUSDAmtToBurn = (symAmount * 100) / OVERCOLLATERALIZATION_RATIO;
+        uint256 xUSDAmtToBurn = (symAmount * 100) / overcollateralizationRatio;
     
         // Check if the staker has enough xUSD to burn
         require(IxUSD(xUSDAddress).balanceOf(msg.sender) >= xUSDAmtToBurn, "Insufficient xUSD balance");
