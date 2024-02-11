@@ -1,51 +1,33 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract TokenSwapper is Ownable {
-    IERC20 public otherToken;
-    IERC20 public symToken;
+contract SymbloxToken is ERC20 {
+    uint256 public constant DECIMALS = 18;
+    address public admin;
 
-    event TokensSwapped(address indexed user, uint256 amount);
-
-    constructor(IERC20 _otherToken, IERC20 _symToken) {
-        require(address(_otherToken) != address(0), "Other token address cannot be zero");
-        require(address(_symToken) != address(0), "SYM token address cannot be zero");
-
-        otherToken = _otherToken;
-        symToken = _symToken;
+    // Constructor sets up initial supply and admin rights
+    constructor(address _teamAndInvestorsAddress) ERC20("Symblox", "SYM") {
+        admin = msg.sender; 
+        _mint(_teamAndInvestorsAddress, 200e6 * 10**DECIMALS); // Reserve 200 million SYM
     }
 
-    /**
-     * Swap from the other token to the SYM token on a 1:1 basis.
-     *
-     * @param amount The amount of other tokens to swap.
-     */
-    function swap(uint256 amount) external {
-        require(amount > 0, "Amount must be greater than 0");
-        
-        // Transfer other tokens to this contract
-        bool sent = otherToken.transferFrom(msg.sender, address(this), amount);
-        require(sent, "Failed to transfer other tokens");
-
-        // Ensure that this contract has enough SYM tokens for swapping
-        require(symToken.balanceOf(address(this)) >= amount, "Insufficient SYM balance in the contract");
-
-        // Transfer SYM tokens back to user
-        symToken.transfer(msg.sender, amount);
-
-        emit TokensSwapped(msg.sender, amount);
+    // Only admin can call this function to mint new tokens
+    function mint(address _to, uint256 _amount) public {
+        require(msg.sender == admin, "Unauthorized");
+        _mint(_to, _amount);
     }
 
-    /**
-     * Withdraw SYM tokens from this contract (in case of excess or end of campaign).
-     *
-     * @param amount The number of SYM tokens to withdraw.
-     */
-    function withdrawSYM(uint256 amount) external onlyOwner {
-        require(amount <= symToken.balanceOf(address(this)), "Insufficient balance to withdraw");
-        symToken.transfer(msg.sender, amount);
+    // Admin can update rewards APR
+    function setRewardsAPR(uint256 _newAPR) public {
+        require(msg.sender == admin, "Unauthorized");
+        // Logic to set new APR
+    }
+
+    // Function to migrate and swap to SYM at a 1 for 1 ratio
+    function migrateTokens(address _fromContract, uint256 _amount) public {
+        // Verify tokens from the _fromContract
+        // Perform 1 for 1 token swap 
+        // we can use migration contract.
     }
 }
