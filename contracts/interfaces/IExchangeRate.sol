@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 
 import "./IDirectIntegrationManager.sol";
 
-// https://docs.synthetix.io/contracts/source/interfaces/iexchangerates
 interface IExchangeRates {
     // Structs
     struct RateAndUpdatedTime {
