@@ -9,12 +9,9 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SymbloxToken is IERC20MultiChain, Ownable {
-    using SafeMath for uint256;
-
     string public constant name = "Symblox";
     string public constant symbol = "SYM";
     uint8 public constant decimals = 18;
-
     uint256 private _totalSupply;
 
     mapping(uint256 => mapping(address => uint256)) private _balances;
@@ -59,8 +56,8 @@ contract SymbloxToken is IERC20MultiChain, Ownable {
     }
 
     function _mint(address account, uint256 amount) internal {
-        _totalSupply = _totalSupply.add(amount);
-        _balances[chainId][account] = _balances[chainId][account].add(amount);
+        _totalSupply += amount;
+        _balances[chainId][account] += amount;
 
         emit Transfer(address(0), account, amount);
     }
@@ -78,8 +75,8 @@ contract SymbloxToken is IERC20MultiChain, Ownable {
         require(recipient != address(0), "Transfer to the zero address");
         require(balanceOf(msg.sender) >= amount, "Transfer amount exceeds balance");
 
-        _balances[chainId][msg.sender] = _balances[chainId][msg.sender].sub(amount);
-        _balances[chainId][recipient] = _balances[chainId][recipient].add(amount);
+        _balances[chainId][msg.sender] -= amount;
+        _balances[chainId][recipient] += amount;
 
         emit Transfer(msg.sender, recipient, amount);
         return true;
@@ -103,9 +100,9 @@ contract SymbloxToken is IERC20MultiChain, Ownable {
         require(_balances[chainId][sender] >= amount, "Transfer amount exceeds balance");
         require(_allowances[sender][msg.sender] >= amount, "Transfer amount exceeds allowance");
 
-        _balances[chainId][sender] = _balances[chainId][sender].sub(amount);
-        _allowances[sender][msg.sender] = _allowances[sender][msg.sender].sub(amount);
-        _balances[chainId][recipient] = _balances[chainId][recipient].add(amount);
+        _balances[chainId][sender] -= amount;
+        _allowances[sender][msg.sender] -= amount;
+        _balances[chainId][recipient] += amount;
 
         emit Transfer(sender, recipient, amount);
         return true;
