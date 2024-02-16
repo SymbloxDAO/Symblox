@@ -17,8 +17,6 @@ contract MultiCollateralVault is Ownable {
 
     // Map of supported collaterals
     mapping(string => CollateralType) public collaterals;
-
-    // NFT contract reference for governance tokens
     ERC721 public gSYM; 
 
     // Events

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "../interfaces/IVault.sol";
+
 interface IxUSD {
     function mint(address to, uint256 amount) external;
     function burn(address from, uint256 amount) external;
@@ -14,14 +16,12 @@ interface IERC20 {
 }
 
 contract SYMStaking {
-
-    // Addresses for xUSD and gSYM contracts (placeholders)
     address public immutable xUSDAddress; 
     address public immutable gSYMAddress; 
 
-
     // Overcollateralization ratio
-    uint256 public overcollateralizationRatio;
+    // uint256 public overcollateralizationRatio;
+    mapping(address => uint256) public overcollateralizationRatio;
 
     address public owner;
 
@@ -32,7 +32,7 @@ contract SYMStaking {
 
     // Keep track of staked SYM
     mapping(address => uint256) public stakes;
-
+    mapping(address => IVault) public vaults;
     // Assume we have an ERC20 token interface for SYM tokens
     IERC20 public SYMToken;
 
@@ -45,28 +45,29 @@ contract SYMStaking {
         SYMToken = IERC20(_SYMTokenAddress);
         xUSDAddress = _xUSDAddress;
         gSYMAddress = _gSYMAddress;
-        overcollateralizationRatio = 350;
         owner = msg.sender;
+        overcollateralizationRatio[owner] = 350;
     }
 
-    function serOvercollateralizationRatio(uint256 _newRatio) external onlyOwner {
+    function serOvercollateralizationRatio(address vaultAddress, uint256 _newRatio) external onlyOwner {
         require(_newRatio > 0, "Ratio must be bigger than zero");
-        overcollateralizationRatio = _newRatio;
+        overcollateralizationRatio[vaultAddress] = _newRatio;
     }
 
-    function stakeSYM(uint256 symAmount) external {
+    function stakeSYM(address vaultAddress, uint256 symAmount) external {
         require(symAmount > 0, "Can't Stake 0 Amount");
-        // Transfer SYM tokens to this contract for staking
         require(SYMToken.transferFrom(msg.sender, address(this), symAmount), "Transfer failed");
 
-        // Update the user's stake
+        IVault vault = vaults[vaultAddress];
+        require(vault != IVault(address(0)), "Vault does not exist");
+
+        uint256 collateralRatio = overcollateralizationRatio[vaultAddress];
+        require(collateralRatio > 0, "Collateral ratio not set");
+
         stakes[msg.sender] += symAmount;
-
         emit SYMStaked(msg.sender, symAmount);
-        // Calculate xUSD amount to mint based on overcollateralization
-        uint256 xUSDAmtToMint = symAmount * 100 / overcollateralizationRatio;
 
-        // Mint xUSD and send to the staker
+        uint256 xUSDAmtToMint = symAmount * 100 / collateralRatio;
         IxUSD(xUSDAddress).mint(msg.sender, xUSDAmtToMint);
 
         // Emit an event for obtaining gSYM (This is where actual gSYM NFT would be minted and sent)
@@ -77,21 +78,16 @@ contract SYMStaking {
     function unstakeSYM(uint256 symAmount) external {
         require(stakes[msg.sender] >= symAmount, "Insufficient staked balance");
 
-        uint256 xUSDAmtToBurn = (symAmount * 100) / overcollateralizationRatio;
-    
-        // Check if the staker has enough xUSD to burn
+        uint256 collateralRatio = overcollateralizationRatio[msg.sender];
+        require(collateralRatio > 0, "Collateral ratio not set");
+
+        uint256 xUSDAmtToBurn = symAmount * 100 / collateralRatio;
         require(IxUSD(xUSDAddress).balanceOf(msg.sender) >= xUSDAmtToBurn, "Insufficient xUSD balance");
 
-        // Burn the corresponding xUSD from the staker's balance
         IxUSD(xUSDAddress).burn(msg.sender, xUSDAmtToBurn);
-        
-        // Reduce the user's stake balance
         stakes[msg.sender] -= symAmount;
-        
-        // Return the SYM tokens to the staker
         require(SYMToken.transfer(msg.sender, symAmount), "Transfer failed");
         
-        // Emit an event for unstaking SYM
         emit SYMUnstaked(msg.sender, symAmount);
     }
 }
