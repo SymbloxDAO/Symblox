@@ -17,7 +17,7 @@ contract MultiCollateralVault is Ownable {
 
     // Map of supported collaterals
     mapping(string => CollateralType) public collaterals;
-    ERC721 public gSYM; 
+    ERC721 public gSYM;
 
     // Events
     event CollateralAdded(string name, address tokenAddress, uint256 ratio);
