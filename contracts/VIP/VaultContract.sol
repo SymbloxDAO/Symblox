@@ -2,8 +2,9 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../interfaces/IVault.sol";
 
-contract Vault {
+abstract contract Vault is IVault {
     // Maps user addresses to a mapping of token addresses and their balances
     mapping(address => mapping(address => uint256)) public balances;
 
