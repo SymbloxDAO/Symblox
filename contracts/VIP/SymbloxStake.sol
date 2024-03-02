@@ -17,7 +17,7 @@ contract SYMStakingContract {
     // Define state variables
     ISymblox public symblox;
     IxUSD public xUSD;
-    uint public constant lockDuration = 7 days;
+    uint public constant lockDuration = 7 * 24 * 60 ^ 60;
     
     struct Stake {
         uint amount;
