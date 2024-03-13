@@ -25,11 +25,12 @@ contract SYMStakingContract {
     }
     
     mapping(address => Stake) public stakes;
+    mapping(address => uint) public lastClaimTime;
     
     // Initialize the contract with SYM and xUSD token addresses
     constructor(address _symblox, address _xUSD) {
         symblox = ISymblox(_symblox);
-        xUSD = IsUSD(_xUSD);
+        xUSD = IxUSD(_xUSD);
     }
 
     // Function for staking SYM and minting xUSD
@@ -64,15 +65,22 @@ contract SYMStakingContract {
     }
 
     // Function to calculate rewards (stub for simplicity; implement your reward logic)
-    function calculateRewards(address staker) external view returns (uint rewards) {
+    function calculateReward(address staker) internal view returns (uint rewards) {
         // Implement the logic to calculate weekly staking rewards for managing Collateralization Ratio and debt.
-        return 0; // Placeholder return
+        uint rewardPerWeek = 1 ether;
+        uint weeksElapsed = (block.timestamp - lastClaimTime[staker]) / 1 weeks;
+        return rewardPerWeek * weeksElapsed;
     }
     
+    function calculateRewards(address staker) external view returns (uint rewards) {
+        require(staker != address(0), "Invalid staker address.");
+        return calculateReward(staker);
+    }
     // Function to claim staking rewards (should be called by the user)
     function claimRewards() external {
-        uint rewards = calculateRewards(msg.sender);
+        uint rewards = calculateReward(msg.sender);
         require(rewards > 0, "No rewards available.");
+        lastClaimTime[msg.sender] = block.timestamp;
         // Transfer rewards to staker
         // ...
         // Implement reward distribution logic
