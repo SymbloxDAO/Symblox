@@ -1,4 +1,5 @@
-pragma solidity >=0.4.24;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
 interface ISynth {
     function currencyKey() external view returns (bytes32);

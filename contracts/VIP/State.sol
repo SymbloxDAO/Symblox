@@ -1,8 +1,9 @@
-pragma solidity ^0.5.16;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
 import "./Owned.sol";
 
-contract State is Owned {
+abstract contract State is Owned {
     address public associatedContract;
 
     constructor(address _associatedContract) internal {
