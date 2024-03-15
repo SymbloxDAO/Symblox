@@ -6,7 +6,7 @@ import "../interfaces/IUniswapV2Router.sol";
 import "../interfaces/IUniswapV2Factory.sol";
 import "../interfaces/IUniswapV2Pair.sol";
 import "../interfaces/IPriceOracle.sol";
-import "../interfaces/ISYMProtocolToken.sol";
+import "../interfaces/ISYM.sol";
 
 interface IToken {
     function decimals() external view returns (uint8);
