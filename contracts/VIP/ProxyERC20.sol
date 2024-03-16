@@ -2,32 +2,32 @@
 pragma solidity ^0.8.17;
 
 import "./Proxy.sol";
-import "./interfaces/IERC20.sol";
+import "../interfaces/IERC20.sol";
 
-contract ProxyERC20 is Proxy, IERC20 {
-    constructor(address _owner) public Proxy(_owner) {}
+abstract contract ProxyERC20 is Proxy, IERC20 {
+    constructor(address _owner) Proxy(_owner) {}
 
-    function name() public view returns (string memory) {
+    function name() public view override returns (string memory) {
         return IERC20(address(target)).name();
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() public view override returns (string memory) {
         return IERC20(address(target)).symbol();
     }
 
-    function decimals() public view returns (uint8) {
+    function decimals() public view override (uint8) {
         return IERC20(address(target)).decimals();
     }
 
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public view override (uint256) {
         return IERC20(address(target)).totalSupply();
     }
 
-    function balanceOf(address account) public view returns (uint256) {
+    function balanceOf(address account) public view overridereturns (uint256) {
         return IERC20(address(target)).balanceOf(account);
     }
 
-    function allowance(address owner, address spender) public view returns (uint256) {
+    function allowance(address owner, address spender) public view overridereturns (uint256) {
         return IERC20(address(target)).allowance(owner, spender);
     }
     function transfer(address to, uint256 value) public returns (bool) {

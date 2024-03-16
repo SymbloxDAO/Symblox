@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+
 // Inheritance
 import "./Owned.sol";
 
@@ -10,7 +11,7 @@ import "./Proxyable.sol";
 contract Proxy is Owned {
     Proxyable public target;
 
-    constructor(address _owner) public Owned(_owner) {}
+    constructor(address _owner) Owned(_owner) {}
 
     function setTarget(Proxyable _target) external onlyOwner {
         target = _target;
@@ -53,24 +54,28 @@ contract Proxy is Owned {
         }
     }
 
-    // solhint-disable no-complex-fallback
-    function() external payable {
+    fallback() external payable {
         // Mutable call setting Proxyable.messageSender as this is using call not delegatecall
+
         target.setMessageSender(msg.sender);
 
         assembly {
-            let free_ptr := mload(0x40)
-            calldatacopy(free_ptr, 0, calldatasize)
+            let freeMemoryPointer := mload(0x40)
+            calldatacopy(freeMemoryPointer, 0, calldatasize())
 
             /* We must explicitly forward ether to the underlying contract as well. */
-            let result := call(gas, sload(target_slot), callvalue, free_ptr, calldatasize, 0, 0)
-            returndatacopy(free_ptr, 0, returndatasize)
+            let result := call(gas(), sload(target.slot), callvalue(), freeMemoryPointer, calldatasize(), 0, 0)
+            returndatacopy(freeMemoryPointer, 0, returndatasize())
 
             if iszero(result) {
-                revert(free_ptr, returndatasize)
+                revert(freeMemoryPointer, returndatasize())
             }
-            return(free_ptr, returndatasize)
+            return(freeMemoryPointer, returndatasize())
         }
+    }
+
+    receive() external payable {
+        
     }
 
     modifier onlyTarget {

@@ -53,14 +53,14 @@ contract SYMStakingContract {
         require(xUSD.transfer(msg.sender, availableToMint), "xUSD minting failed");
     }
 
-    // Function to allow users to withdraw their SNX after the lock period
-    function withdrawSNX() external {
+    // Function to allow users to withdraw their SYM after the lock period
+    function withdrawSYM() external {
         Stake memory stake = stakes[msg.sender];
-        require(stake.amount > 0, "You have no SNX staked.");
-        require(block.timestamp >= stake.releaseTime, "Your SNX is still locked.");
+        require(stake.amount > 0, "You have no SYM staked.");
+        require(block.timestamp >= stake.releaseTime, "Your SYM is still locked.");
         
         // Transfer SYM back to user
-        require(symblox.transferFrom(address(this), msg.sender, stake.amount), "SNX transfer failed");
+        require(symblox.transferFrom(address(this), msg.sender, stake.amount), "SYM transfer failed");
         delete stakes[msg.sender]; // Clear user's stake after withdrawal
     }
 

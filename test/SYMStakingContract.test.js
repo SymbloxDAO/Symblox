@@ -51,7 +51,7 @@ describe("SYMStakingContract", function () {
 
     it("Should not allow users to withdraw SYM before lock duration expires", async function () {
       // Attempt withdrawal before time
-      await expect(symStaking.connect(addr1).withdrawSNX()).to.be.revertedWith(
+      await expect(symStaking.connect(addr1).withdrawSYM()).to.be.revertedWith(
         "Your SYM is still locked."
       );
     });
@@ -61,7 +61,7 @@ describe("SYMStakingContract", function () {
       await time.increase(lockDuration + 1);
 
       // Withdraw tokens
-      await expect(symStaking.connect(addr1).withdrawSNX())
+      await expect(symStaking.connect(addr1).withdrawSYM())
         .to.emit(symStaking, "SYMWithdrawn") // Assuming there is such an event
         .withArgs(addr1.address, symAmountToStake);
     });
